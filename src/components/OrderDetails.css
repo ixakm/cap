@@ -1,0 +1,87 @@
+.order-details-wrapper {
+  background-color: #f0f2f5;
+  min-height: 100vh;
+  padding: 50px 0;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+.order-card {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 40px 30px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.order-card h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+  font-weight: bold;
+  color: #222;
+}
+
+.order-card p {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.order-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.order-list li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  margin: 6px 0;
+  color: #333;
+}
+
+.icon-box {
+  margin-right: 6px;
+}
+
+.order-card h3 {
+  font-size: 18px;
+  margin: 20px 0 10px;
+  color: #000;
+  font-weight: bold;
+}
+
+.qr-box {
+  margin: 20px 0;
+}
+
+.close-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+  margin-top: 10px;
+}
+
+.close-btn:hover {
+  background-color: #0056b3;
+}
+
+/* 상단 헤더 & 네비게이션은 기존 유지 */
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
