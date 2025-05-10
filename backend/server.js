@@ -53,30 +53,36 @@ app.get('/api/data', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 9;
   const offset = (page - 1) * limit;
-  const category = req.query.category;
+
+  const category = req.query.category || 'all';
   const sort = req.query.sort || '최신순';
+  const productType = req.query.product_type || '책'; // ✅ 핵심 필드
 
   let whereClause = 'p.is_active = TRUE';
-  let orderClause = 'p.price ASC';
+  const params = [];
 
-  if (category && category !== 'all') {
+  // ✅ product_type 필터
+  if (productType !== 'all') {
+    whereClause += ` AND p.product_type = ?`;
+    params.push(productType);
+  }
+
+  // ✅ category는 책일 때만 적용 (문구류에는 category 없음)
+  if (productType === '책' && category !== 'all') {
     whereClause += ` AND b.category = ?`;
+    params.push(category);
   }
 
-  switch (sort) {
-    case '낮은가격순':
-      orderClause = 'p.price ASC';
-      break;
-    case '높은가격순':
-      orderClause = 'p.price DESC';
-      break;
-  }
+  // ✅ 정렬 기준
+  let orderClause = 'p.created_at DESC';
+  if (sort === '낮은가격순') orderClause = 'p.price ASC';
+  else if (sort === '높은가격순') orderClause = 'p.price DESC';
 
   try {
     const db = await initDB();
 
     const query = `
-      SELECT p.*, b.author, b.publisher, b.isbn, b.category, b.published_year
+      SELECT p.*, b.author, b.publisher, b.category
       FROM product p
       LEFT JOIN book b ON p.product_id = b.product_id
       WHERE ${whereClause}
@@ -84,13 +90,7 @@ app.get('/api/data', async (req, res) => {
       LIMIT ? OFFSET ?
     `;
 
-    const params = [];
-    if (category && category !== 'all') {
-      params.push(category);
-    }
-    params.push(limit, offset);
-
-    const [results] = await db.query(query, params);
+    const [results] = await db.query(query, [...params, limit, offset]);
 
     const countQuery = `
       SELECT COUNT(*) as total
@@ -99,12 +99,7 @@ app.get('/api/data', async (req, res) => {
       WHERE ${whereClause}
     `;
 
-    const countParams = [];
-    if (category && category !== 'all') {
-      countParams.push(category);
-    }
-
-    const [countResults] = await db.query(countQuery, countParams);
+    const [countResults] = await db.query(countQuery, params);
     const totalItems = countResults[0].total;
     const totalPages = Math.ceil(totalItems / limit);
 
@@ -115,16 +110,17 @@ app.get('/api/data', async (req, res) => {
         total: totalItems,
         per_page: limit,
         current_page: page,
-        last_page: totalPages
-      }
+        last_page: totalPages,
+      },
     });
 
     await db.end();
-  } catch (error) {
-    console.error('데이터 조회 오류:', error);
-    res.status(500).json({ error: '데이터베이스 오류', details: error.message });
+  } catch (err) {
+    console.error('데이터 조회 오류:', err);
+    res.status(500).json({ error: '서버 오류 발생' });
   }
 });
+
 // 장바구니에 상품 추가
 app.post('/api/cart', async (req, res) => {
   const { product_id, quantity } = req.body;
@@ -349,24 +345,33 @@ app.delete('/api/cart/item/:id', async (req, res) => {
 // 검색 API
 app.get('/api/search', async (req, res) => {
   const searchQuery = req.query.query || '';
+  const productType = req.query.product_type || '책';
 
   try {
     const db = await initDB();
-    const [results] = await db.query(
-      `SELECT p.*, b.author, b.publisher, b.category
-       FROM product p
-       LEFT JOIN book b ON p.product_id = b.product_id
-       WHERE p.product_name LIKE ?`,
-      [`%${searchQuery}%`]
-    );
 
+    const whereClause = `p.product_name LIKE ? AND p.product_type = ?`;
+    const params = [`%${searchQuery}%`, productType];
+
+    const query = `
+      SELECT 
+        p.product_id, p.product_name, p.price, p.image_url, p.product_type,
+        b.author, b.publisher, b.category
+      FROM product p
+      LEFT JOIN book b ON p.product_id = b.product_id
+      WHERE ${whereClause}
+    `;
+
+    const [results] = await db.query(query, params);
     res.json({ data: results });
+
     await db.end();
   } catch (err) {
-    console.error('검색 오류:', err);
-    res.status(500).json({ error: '검색 실패' });
+    console.error('🔴 검색 오류:', err);
+    res.status(500).json({ error: '검색 실패', message: err.message });
   }
 });
+
 
 // 주문 상세 조회
 app.get('/api/order-details/:orderId', async (req, res) => {
@@ -562,6 +567,83 @@ app.get('/api/order-details/:orderId', async (req, res) => {
   }
 });
 
+app.get('/api/data', async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = 9;
+  const offset = (page - 1) * limit;
+  const category = req.query.category;
+  const sort = req.query.sort || '최신순';
+  const productType = req.query.product_type || '책'; // ✅ 추가
+
+  let whereClause = 'p.is_active = TRUE';
+  let orderClause = 'p.price ASC';
+  const params = [];
+
+  // ✅ product_type 필터 추가
+  if (productType && productType !== 'all') {
+    whereClause += ` AND p.product_type = ?`;
+    params.push(productType);
+  }
+
+  if (category && category !== 'all') {
+    whereClause += ` AND b.category = ?`;
+    params.push(category);
+  }
+
+  switch (sort) {
+    case '낮은가격순':
+      orderClause = 'p.price ASC';
+      break;
+    case '높은가격순':
+      orderClause = 'p.price DESC';
+      break;
+    default:
+      orderClause = 'p.created_at DESC';
+  }
+
+  try {
+    const db = await initDB();
+
+    const query = `
+      SELECT p.*, b.author, b.publisher, b.isbn, b.category, b.published_year
+      FROM product p
+      LEFT JOIN book b ON p.product_id = b.product_id
+      WHERE ${whereClause}
+      ORDER BY ${orderClause}
+      LIMIT ? OFFSET ?
+    `;
+
+    const queryParams = [...params, limit, offset];
+
+    const [results] = await db.query(query, queryParams);
+
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM product p
+      LEFT JOIN book b ON p.product_id = b.product_id
+      WHERE ${whereClause}
+    `;
+    const [countResults] = await db.query(countQuery, params);
+    const totalItems = countResults[0].total;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.json({
+      success: true,
+      data: results,
+      pagination: {
+        total: totalItems,
+        per_page: limit,
+        current_page: page,
+        last_page: totalPages
+      }
+    });
+
+    await db.end();
+  } catch (error) {
+    console.error('데이터 조회 오류:', error);
+    res.status(500).json({ error: '데이터베이스 오류', details: error.message });
+  }
+});
 
 
 // 서버 실행
