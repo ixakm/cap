@@ -630,20 +630,20 @@
   z-index: 10000;
 }
 
+
 .modal-buttons {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 4px; /* 더 좁은 간격 */
+  margin-top: 15px;
 }
 
 .modal-buttons button {
-  padding: 8px 16px;
-  border-radius: 6px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
+  padding: 6px 12px;
+  min-width: auto;   /* 넓이 고정 안 함 */
+  flex-shrink: 1;     /* 자동 줄어들 수 있게 */
 }
+
 .modal-content {
   background: #2f2f2f;
   padding: 30px 20px;
@@ -663,4 +663,11 @@
   margin: 15px 0;
   text-align: center;
   background-color: #f8f8f8;
+}
+
+.no-results {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 1.2rem;
+  color: #ccc;
 }

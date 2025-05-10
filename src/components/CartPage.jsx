@@ -11,6 +11,7 @@ const CartPage = () => {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [phoneLastDigits, setPhoneLastDigits] = useState('');
   const [sessionId, setSessionId] = useState('');
+  const [keyword, setKeyword] = useState('');
   const navigate = useNavigate();
 
   const goToMainPage = () => navigate('/');

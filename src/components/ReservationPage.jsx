@@ -41,18 +41,18 @@ const ReservationPage = () => {
   };
 
   return (
-    <div className="reservation-page">
-      {/* ✅ 헤더 */}
-      <header className="main-header">
-        <h1 className="logo">EasyFind</h1>
+    <div className="bookstore-container">
+      {/* 헤더 */}
+      <header className="header">
+        <div className="header-title" onClick={goToMainPage} style={{ cursor: 'pointer' }}>EasyFind</div>
         <div className="search-box">
-          <input type="text" placeholder="도서 검색..." disabled />
-          <button disabled>검색</button>
+          <input type="text" placeholder="도서 검색..." className="search-input" disabled />
+          <button className="search-button" disabled>검색</button>
         </div>
       </header>
 
-      {/* ✅ 네비게이션 */}
-      <nav className="navbar">
+      {/* 네비게이션 */}
+      <nav className="nav-menu">
         <ul>
           <li onClick={goToMainPage}>메인</li>
           <li onClick={goToBookPage}>도서 목록</li>
@@ -62,48 +62,54 @@ const ReservationPage = () => {
         </ul>
       </nav>
 
-      {/* ✅ 전화번호 입력 모달 */}
+      {/* 전화번호 입력 모달 */}
       {showModal && (
-        <div className="phone-modal">
-          <form onSubmit={handlePhoneSubmit} className="phone-form">
-            <h2>전화번호 뒷자리 4자리를 입력해주세요</h2>
-            <input
-              type="text"
-              maxLength="4"
-              value={phoneTail}
-              onChange={(e) => setPhoneTail(e.target.value)}
-            />
-            <button type="submit">확인</button>
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ textAlign: 'center', padding: '20px' }}>
+            <h3 style={{ marginBottom: '10px' }}>전화번호 뒷자리 4자리를 입력해주세요</h3>
+            <form onSubmit={handlePhoneSubmit}>
+              <input
+                type="text"
+                maxLength="4"
+                value={phoneTail}
+                onChange={(e) => setPhoneTail(e.target.value)}
+                placeholder="예: 1234"
+                className="reservation-input"
+              />
+              <div className="modal-buttons" style={{ marginTop: '10px' }}>
+                <button type="submit" className="reservation-button">확인</button>
+              </div>
+            </form>
             {error && <p className="error-message">{error}</p>}
-          </form>
+          </div>
         </div>
       )}
 
-      {/* ✅ 주문 카드 목록 */}
+      {/* 주문 목록 카드 */}
       {!showModal && (
-        <div className="orders-container">
+        <div className="book-list">
           {orders.map((order) => (
             <div
               key={order.order_id}
-              className="order-card"
+              className="book-card"
               onClick={() => setSelectedOrder(order)}
+              style={{ cursor: 'pointer' }}
             >
-              <h3 className="order-id">주문번호: {order.order_id}</h3>
-              <p>대표 상품: {order.representative_product}</p>
-              <p>주문일자: {new Date(order.order_date).toLocaleString('ko-KR')}</p>
-              <p>총 수량: {order.total_quantity}개</p>
-              <p className="order-amount">
-                결제 금액: <span>{Math.round(order.total_amount).toLocaleString()}원</span>
-              </p>
+              <div className="book-title">주문번호: {order.order_id}</div>
+              <p className="book-author">대표 상품: {order.representative_product}</p>
+              <p className="book-publisher">주문일자: {new Date(order.order_date).toLocaleString('ko-KR')}</p>
+              <p className="book-price">총 수량: {order.total_quantity}개 </p>
+              <p className="book-price">총 금액: {Math.round(order.total_amount).toLocaleString()}원</p>
+              <button className="add-to-cart-btn">상세보기</button>
             </div>
           ))}
         </div>
       )}
 
-      {/* ✅ 상세 정보 모달 */}
+      {/* 상세 모달 */}
       {selectedOrder && (
-        <div className="order-popup-overlay" onClick={() => setSelectedOrder(null)}>
-          <div className="order-popup" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>📦 주문 상세 정보</h3>
             <p>주문번호: {selectedOrder.order_id}</p>
             <p>대표 상품: {selectedOrder.representative_product}</p>
@@ -115,10 +121,8 @@ const ReservationPage = () => {
                 </li>
               ))}
             </ul>
-            <p>총 수량: {selectedOrder.total_quantity || 0}개</p>
-            <p className="order-amount">
-              결제 금액: <span>{Math.round(selectedOrder.total_amount).toLocaleString()}원</span>
-            </p>
+            <p>총 수량: {selectedOrder.total_quantity}개</p>
+            <p className="order-amount">총 금액: <span>{Math.round(selectedOrder.total_amount).toLocaleString()}원</span></p>
             <div className="qr-box">
               <QRCodeCanvas value={`order:${selectedOrder.order_id}`} size={120} />
             </div>
